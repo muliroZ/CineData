@@ -1,0 +1,47 @@
+resources:
+  jobs:
+    CineData:
+      name: CineData
+      description: >-
+        ### Job CineData
+
+        > Job de execução do fluxo Landing -> Bronze -> Silver -> Gold da 1°
+        atividade RocketLab
+      schedule:
+        quartz_cron_expression: 34 0 0 * * ?
+        timezone_id: America/Recife
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: to_Bronze
+          notebook_task:
+            notebook_path: notebooks/Landing_to_Bronze
+            base_parameters:
+              data_inicio_formatada: 09-11-2026
+              data_fim_formatada: 09-18-2026
+            source: GIT
+        - task_key: to_Silver
+          depends_on:
+            - task_key: to_Bronze
+          notebook_task:
+            notebook_path: notebooks/Bronze_to_Silver
+            base_parameters:
+              data_inicio: 09-11-2026
+              data_fim: 09-18-2026
+            source: GIT
+        - task_key: to_Gold
+          depends_on:
+            - task_key: to_Silver
+          notebook_task:
+            notebook_path: notebooks/Silver_to_Gold
+            source: GIT
+      git_source:
+        git_url: https://github.com/muliroZ/CineData
+        git_provider: gitHub
+        git_branch: main
+      queue:
+        enabled: true
+      environments:
+        - environment_key: Default
+          spec:
+            environment_version: "5"
+      performance_target: PERFORMANCE_OPTIMIZED
